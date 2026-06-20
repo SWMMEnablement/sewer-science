@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+
+type Mode = "vacuum" | "gravity";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,8 +25,11 @@ export const Route = createFileRoute("/")({
 });
 
 function VacuumSewersMonograph() {
+  const [mode, setMode] = useState<Mode>("vacuum");
+  const isVac = mode === "vacuum";
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-accent/20">
+
       {/* Top Nav */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -34,11 +40,15 @@ function VacuumSewersMonograph() {
               HYDRAULIC ENGINEERING DESIGN SERIES
             </span>
           </div>
-          <div className="hidden sm:block mono-label text-muted-foreground italic">
-            Rev. June 2026
+          <div className="flex items-center gap-3">
+            <ModeToggle mode={mode} setMode={setMode} />
+            <span className="hidden sm:block mono-label text-muted-foreground italic">
+              Rev. June 2026
+            </span>
           </div>
         </div>
       </nav>
+
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-12 pt-12 pb-24">
         {/* Sticky Sidebar */}
@@ -140,11 +150,13 @@ function VacuumSewersMonograph() {
 
           {/* 02. Anatomy */}
           <Section id="anatomy" tag="FIG 01" title="Component Anatomy">
-            <SystemSchematic />
+            <SystemSchematic mode={mode} />
             <p className="mono-label text-muted-foreground mt-3 mb-10">
-              Figure 1.0 — Typical vacuum collection layout. Sawtooth lifts maintain liquid
-              seals between transport events; the station maintains continuous negative head.
+              Figure 1.0 — {isVac
+                ? "Typical vacuum collection layout. Sawtooth lifts maintain liquid seals between transport events; the station maintains continuous negative head."
+                : "Conventional gravity collection. Continuous downhill profile, manholes at junctions, free-surface flow driven by slope."}
             </p>
+
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <ComponentCard
@@ -170,8 +182,12 @@ function VacuumSewersMonograph() {
                 <thead>
                   <tr className="border-y-2 border-foreground">
                     <th className="py-3 pr-4 font-bold uppercase tracking-wider">Parameter</th>
-                    <th className="py-3 pr-4 font-bold uppercase tracking-wider">Gravity</th>
-                    <th className="py-3 pr-4 font-bold uppercase tracking-wider">Vacuum</th>
+                    <th className={`py-3 pr-4 font-bold uppercase tracking-wider transition-colors ${!isVac ? "text-accent" : "text-muted-foreground"}`}>
+                      Gravity {!isVac && <span className="ml-1 text-[10px]">● active</span>}
+                    </th>
+                    <th className={`py-3 pr-4 font-bold uppercase tracking-wider transition-colors ${isVac ? "text-accent" : "text-muted-foreground"}`}>
+                      Vacuum {isVac && <span className="ml-1 text-[10px]">● active</span>}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -189,12 +205,13 @@ function VacuumSewersMonograph() {
                   ].map(([p, g, v]) => (
                     <tr key={p}>
                       <td className="py-4 pr-4 font-medium">{p}</td>
-                      <td className="py-4 pr-4 text-muted-foreground">{g}</td>
-                      <td className="py-4 pr-4 text-muted-foreground">{v}</td>
+                      <td className={`py-4 pr-4 transition-colors ${!isVac ? "text-foreground bg-accent/5" : "text-muted-foreground"}`}>{g}</td>
+                      <td className={`py-4 pr-4 transition-colors ${isVac ? "text-foreground bg-accent/5" : "text-muted-foreground"}`}>{v}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
             </div>
           </Section>
 
@@ -203,20 +220,20 @@ function VacuumSewersMonograph() {
             <Prose>
               <p>
                 ICM&apos;s 1D Saint-Venant engine is built for free-surface and surcharged
-                gravity flow. It does not natively model two-phase compressible slug transport.
-                Vacuum systems are therefore represented by analogy: the dominant transient
-                behaviors that govern <em>system-level</em> performance — sump fill cycles,
-                station duty patterns, reservoir level, and trunk-main travel times — can be
-                reproduced accurately, while the microscale air-liquid mechanics inside a
-                single transport event are abstracted away.
+                gravity flow. {isVac
+                  ? "It does not natively model two-phase compressible slug transport. Vacuum systems are therefore represented by analogy: the dominant transient behaviors that govern system-level performance — sump fill cycles, station duty patterns, reservoir level, and trunk-main travel times — can be reproduced accurately, while the microscale air-liquid mechanics inside a single transport event are abstracted away."
+                  : "A conventional gravity network is its native problem domain. Components map directly to first-class ICM objects without analogy or workaround — the engine solves free-surface flow with optional surcharge throughout."}
               </p>
             </Prose>
 
             <div className="bg-surface border border-border rounded-lg overflow-hidden">
-              <div className="p-4 bg-secondary border-b border-border">
+              <div className="p-4 bg-secondary border-b border-border flex items-center justify-between">
                 <p className="text-xs text-muted-foreground font-medium">
                   Table 4.1 — Physical component → ICM construct
                 </p>
+                <span className="mono-label text-accent">
+                  {isVac ? "VACUUM MODE" : "GRAVITY MODE"}
+                </span>
               </div>
               <div className="grid grid-cols-[1.2fr_1.3fr_1.8fr] mono-label bg-foreground text-background py-2 px-4">
                 <span>Physical</span>
@@ -224,48 +241,28 @@ function VacuumSewersMonograph() {
                 <span>Key parameters / notes</span>
               </div>
               <div className="divide-y divide-border">
-                {[
-                  [
-                    "House lateral / gravity collection",
-                    "Subcatchment + Node",
-                    "Standard wastewater profile; no RDII unless premises drain into the sump.",
-                  ],
-                  [
-                    "Collection sump (4–10 dwellings)",
-                    "Storage Node",
-                    "Custom area-depth (~0.04 m³ active). Open level boundary at top.",
-                  ],
-                  [
-                    "Interface valve",
-                    "RTC-controlled Orifice or Sluice",
-                    "Cd ≈ 0.6; binary opening logic on sump level; pulse duration 3–10 s.",
-                  ],
-                  [
-                    "Vacuum main (sawtooth)",
-                    "User-defined Conduit",
-                    "Manning's n ≈ 0.009 (PE/PVC); invert profile mirrors sawtooth; enable Preissmann slot.",
-                  ],
-                  [
-                    "Vacuum reservoir",
-                    "Storage Node",
-                    "Area-depth of physical tank; downstream level set by fixed-head outfall at negative head.",
-                  ],
-                  [
-                    "Vacuum generators",
-                    "Implicit (fixed-head boundary)",
-                    "Represented as a constant-head outfall (e.g. −5.5 to −6.5 mH₂O) maintained by RTC.",
-                  ],
-                  [
-                    "Sewage discharge pumps",
-                    "Pump (H–Q curve)",
-                    "Standard rotodynamic pump; suction from reservoir node; level-based start/stop.",
-                  ],
-                  [
-                    "Force / rising main downstream",
-                    "Conduit (circular)",
-                    "Modeled normally; pump curve must match steady-state operating point.",
-                  ],
-                ].map(([p, icm, params]) => (
+                {(isVac
+                  ? [
+                      ["House lateral / gravity collection", "Subcatchment + Node", "Standard wastewater profile; no RDII unless premises drain into the sump."],
+                      ["Collection sump (4–10 dwellings)", "Storage Node", "Custom area-depth (~0.04 m³ active). Open level boundary at top."],
+                      ["Interface valve", "RTC-controlled Orifice or Sluice", "Cd ≈ 0.6; binary opening logic on sump level; pulse duration 3–10 s."],
+                      ["Vacuum main (sawtooth)", "User-defined Conduit", "Manning's n ≈ 0.009 (PE/PVC); invert profile mirrors sawtooth; enable Preissmann slot."],
+                      ["Vacuum reservoir", "Storage Node", "Area-depth of physical tank; downstream level set by fixed-head outfall at negative head."],
+                      ["Vacuum generators", "Implicit (fixed-head boundary)", "Represented as a constant-head outfall (e.g. −5.5 to −6.5 mH₂O) maintained by RTC."],
+                      ["Sewage discharge pumps", "Pump (H–Q curve)", "Standard rotodynamic pump; suction from reservoir node; level-based start/stop."],
+                      ["Force / rising main downstream", "Conduit (circular)", "Modeled normally; pump curve must match steady-state operating point."],
+                    ]
+                  : [
+                      ["House lateral / property drainage", "Subcatchment + Node", "Standard wastewater diurnal; add RDII for combined or leaky systems."],
+                      ["Manhole / access chamber", "Manhole Node", "Cover level, invert, chamber area; flood type Lost / Stored / 2D as needed."],
+                      ["Gravity collector / trunk sewer", "Conduit (circular)", "Manning's n ≈ 0.012–0.015 (concrete); true slope; surcharge handled natively."],
+                      ["Junction / drop manhole", "Manhole + headloss type", "Standard / Quadratic / HEC-22 headloss; use drop for vertical offsets."],
+                      ["Inverted siphon", "Siphon link", "Multiple barrels with priming logic; verify scour velocity in low flows."],
+                      ["Lift / pumping station wet well", "Storage Node", "Plan area, invert, top level; defines pump start/stop range."],
+                      ["Lift station pumps", "Pump (H–Q curve)", "Level-based RTC; verify duty point against system curve."],
+                      ["Outfall to WWTP / receiving water", "Outfall Node", "Free, fixed-head, or tidal boundary as appropriate."],
+                    ]
+                ).map(([p, icm, params]) => (
                   <div
                     key={p}
                     className="grid grid-cols-[1.2fr_1.3fr_1.8fr] p-4 text-sm items-start"
@@ -277,6 +274,7 @@ function VacuumSewersMonograph() {
                 ))}
               </div>
             </div>
+
 
             <SubHeading>Modeling strategy</SubHeading>
             <Prose>
@@ -735,7 +733,11 @@ function CaseStudy({
 
 /* ----------------------------- schematic SVG ----------------------------- */
 
-function SystemSchematic() {
+function SystemSchematic({ mode }: { mode: Mode }) {
+  return mode === "vacuum" ? <VacuumSchematic /> : <GravitySchematic />;
+}
+
+function VacuumSchematic() {
   return (
     <div className="w-full border border-border bg-surface rounded-lg overflow-hidden">
       <svg
@@ -744,6 +746,7 @@ function SystemSchematic() {
         role="img"
         aria-label="Vacuum sewer system schematic"
       >
+
         <defs>
           <pattern id="paperGrid" width="24" height="24" patternUnits="userSpaceOnUse">
             <path
@@ -1114,3 +1117,306 @@ function SystemSchematic() {
     </div>
   );
 }
+
+/* ----------------------------- mode toggle ------------------------------- */
+
+function ModeToggle({ mode, setMode }: { mode: Mode; setMode: (m: Mode) => void }) {
+  return (
+    <div
+      role="tablist"
+      aria-label="System mode"
+      className="inline-flex items-center rounded-md border border-border bg-surface p-0.5 text-[11px] font-mono uppercase tracking-wider"
+    >
+      {(["gravity", "vacuum"] as const).map((m) => {
+        const active = mode === m;
+        return (
+          <button
+            key={m}
+            role="tab"
+            aria-selected={active}
+            onClick={() => setMode(m)}
+            className={`px-3 py-1.5 rounded-[5px] transition-colors ${
+              active
+                ? "bg-foreground text-background font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {m}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* --------------------------- gravity schematic --------------------------- */
+
+function GravitySchematic() {
+  const manholes = [160, 360, 560, 760, 960];
+  // sloped pipe descending from left to right
+  const pipeY = (x: number) => 230 + (x - 80) * 0.07;
+  return (
+    <div className="w-full border border-border bg-surface rounded-lg overflow-hidden">
+      <svg
+        viewBox="0 0 1200 520"
+        className="w-full h-auto block"
+        role="img"
+        aria-label="Conventional gravity sewer schematic"
+      >
+        <defs>
+          <pattern id="paperGridG" width="24" height="24" patternUnits="userSpaceOnUse">
+            <path
+              d="M 24 0 L 0 0 0 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.5"
+              className="text-foreground"
+              opacity="0.06"
+            />
+          </pattern>
+        </defs>
+        <rect width="1200" height="520" fill="url(#paperGridG)" />
+
+        {/* Ground line (sloped) */}
+        <line
+          x1="0"
+          y1="110"
+          x2="1200"
+          y2="190"
+          stroke="currentColor"
+          className="text-foreground"
+          strokeWidth="1"
+          opacity="0.35"
+        />
+        <text
+          x="12"
+          y="102"
+          className="fill-current text-muted-foreground"
+          style={{ fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+        >
+          GROUND · NATURAL FALL
+        </text>
+
+        {/* Houses */}
+        {[100, 300, 500, 700, 900].map((x, i) => {
+          const gy = 110 + (x / 1200) * 80;
+          return (
+            <g key={i}>
+              <polygon
+                points={`${x - 22},${gy - 20} ${x},${gy - 45} ${x + 22},${gy - 20}`}
+                fill="currentColor"
+                className="text-accent"
+                opacity="0.85"
+              />
+              <rect
+                x={x - 18}
+                y={gy - 20}
+                width="36"
+                height="28"
+                fill="currentColor"
+                className="text-accent"
+                opacity="0.7"
+              />
+              {/* lateral to nearest manhole */}
+              <line
+                x1={x}
+                y1={gy + 8}
+                x2={manholes.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a))}
+                y2={pipeY(
+                  manholes.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a)),
+                )}
+                stroke="currentColor"
+                className="text-foreground"
+                strokeWidth="1.5"
+                opacity="0.45"
+              />
+            </g>
+          );
+        })}
+
+        {/* Gravity trunk sewer (sloped, continuous fall) */}
+        <line
+          x1="80"
+          y1={pipeY(80)}
+          x2="1080"
+          y2={pipeY(1080)}
+          stroke="currentColor"
+          className="text-foreground"
+          strokeWidth="3"
+        />
+        <line
+          x1="80"
+          y1={pipeY(80) + 16}
+          x2="1080"
+          y2={pipeY(1080) + 16}
+          stroke="currentColor"
+          className="text-foreground"
+          strokeWidth="3"
+        />
+        {/* free-surface flow inside */}
+        <line
+          x1="80"
+          y1={pipeY(80) + 10}
+          x2="1080"
+          y2={pipeY(1080) + 10}
+          stroke="currentColor"
+          className="text-accent"
+          strokeWidth="2"
+          opacity="0.5"
+        />
+
+        <text
+          x="600"
+          y={pipeY(600) + 50}
+          textAnchor="middle"
+          className="fill-current text-muted-foreground"
+          style={{ fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+        >
+          GRAVITY TRUNK SEWER · CONTINUOUS FALL 0.4 – 1.0% · FREE-SURFACE FLOW
+        </text>
+
+        {/* Manholes */}
+        {manholes.map((x, i) => {
+          const gy = 110 + (x / 1200) * 80;
+          const py = pipeY(x);
+          return (
+            <g key={i}>
+              {/* chamber */}
+              <rect
+                x={x - 14}
+                y={gy + 6}
+                width="28"
+                height={py - gy - 6}
+                fill="currentColor"
+                className="text-surface"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <rect
+                x={x - 14}
+                y={gy + 6}
+                width="28"
+                height={py - gy - 6}
+                fill="none"
+                stroke="currentColor"
+                className="text-foreground"
+                strokeWidth="1.5"
+              />
+              {/* cover */}
+              <rect
+                x={x - 18}
+                y={gy + 2}
+                width="36"
+                height="6"
+                fill="currentColor"
+                className="text-foreground"
+              />
+              <text
+                x={x}
+                y={gy - 4}
+                textAnchor="middle"
+                className="fill-current text-muted-foreground"
+                style={{ fontSize: 9, fontFamily: "JetBrains Mono, monospace" }}
+              >
+                MH{i + 1}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Outfall */}
+        <g>
+          <rect
+            x="1080"
+            y={pipeY(1080) - 30}
+            width="90"
+            height="70"
+            fill="currentColor"
+            className="text-surface"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <rect
+            x="1080"
+            y={pipeY(1080) - 30}
+            width="90"
+            height="70"
+            fill="none"
+            stroke="currentColor"
+            className="text-foreground"
+            strokeWidth="1.5"
+          />
+          <text
+            x="1125"
+            y={pipeY(1080) + 60}
+            textAnchor="middle"
+            className="fill-current text-foreground"
+            style={{ fontSize: 11, fontFamily: "JetBrains Mono, monospace", fontWeight: 600 }}
+          >
+            OUTFALL / WWTP
+          </text>
+        </g>
+
+        {/* Callouts */}
+        <g style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10 }}>
+          <line
+            x1="160"
+            y1={pipeY(160)}
+            x2="160"
+            y2="380"
+            stroke="currentColor"
+            className="text-accent"
+            strokeWidth="1"
+            strokeDasharray="2 2"
+          />
+          <text x="160" y="400" textAnchor="middle" className="fill-current text-accent" fontWeight="700">
+            MANHOLE NODE
+          </text>
+
+          <line
+            x1="600"
+            y1={pipeY(600) + 16}
+            x2="600"
+            y2="430"
+            stroke="currentColor"
+            className="text-foreground"
+            strokeWidth="1"
+            strokeDasharray="2 2"
+            opacity="0.5"
+          />
+          <text x="600" y="450" textAnchor="middle" className="fill-current text-foreground" fontWeight="700">
+            CIRCULAR CONDUIT
+          </text>
+        </g>
+
+        {/* Direction of flow */}
+        <g>
+          <line
+            x1="700"
+            y1="490"
+            x2="900"
+            y2="490"
+            stroke="currentColor"
+            className="text-accent"
+            strokeWidth="1.5"
+          />
+          <polygon
+            points="900,485 900,495 912,490"
+            fill="currentColor"
+            className="text-accent"
+          />
+          <text
+            x="800"
+            y="510"
+            textAnchor="middle"
+            className="fill-current text-accent"
+            style={{ fontSize: 10, fontFamily: "JetBrains Mono, monospace", fontWeight: 600 }}
+          >
+            FLOW · GRAVITY DRIVEN
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
