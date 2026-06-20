@@ -150,11 +150,13 @@ function VacuumSewersMonograph() {
 
           {/* 02. Anatomy */}
           <Section id="anatomy" tag="FIG 01" title="Component Anatomy">
-            <SystemSchematic />
+            <SystemSchematic mode={mode} />
             <p className="mono-label text-muted-foreground mt-3 mb-10">
-              Figure 1.0 — Typical vacuum collection layout. Sawtooth lifts maintain liquid
-              seals between transport events; the station maintains continuous negative head.
+              Figure 1.0 — {isVac
+                ? "Typical vacuum collection layout. Sawtooth lifts maintain liquid seals between transport events; the station maintains continuous negative head."
+                : "Conventional gravity collection. Continuous downhill profile, manholes at junctions, free-surface flow driven by slope."}
             </p>
+
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <ComponentCard
