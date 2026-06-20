@@ -182,8 +182,12 @@ function VacuumSewersMonograph() {
                 <thead>
                   <tr className="border-y-2 border-foreground">
                     <th className="py-3 pr-4 font-bold uppercase tracking-wider">Parameter</th>
-                    <th className="py-3 pr-4 font-bold uppercase tracking-wider">Gravity</th>
-                    <th className="py-3 pr-4 font-bold uppercase tracking-wider">Vacuum</th>
+                    <th className={`py-3 pr-4 font-bold uppercase tracking-wider transition-colors ${!isVac ? "text-accent" : "text-muted-foreground"}`}>
+                      Gravity {!isVac && <span className="ml-1 text-[10px]">● active</span>}
+                    </th>
+                    <th className={`py-3 pr-4 font-bold uppercase tracking-wider transition-colors ${isVac ? "text-accent" : "text-muted-foreground"}`}>
+                      Vacuum {isVac && <span className="ml-1 text-[10px]">● active</span>}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -201,12 +205,13 @@ function VacuumSewersMonograph() {
                   ].map(([p, g, v]) => (
                     <tr key={p}>
                       <td className="py-4 pr-4 font-medium">{p}</td>
-                      <td className="py-4 pr-4 text-muted-foreground">{g}</td>
-                      <td className="py-4 pr-4 text-muted-foreground">{v}</td>
+                      <td className={`py-4 pr-4 transition-colors ${!isVac ? "text-foreground bg-accent/5" : "text-muted-foreground"}`}>{g}</td>
+                      <td className={`py-4 pr-4 transition-colors ${isVac ? "text-foreground bg-accent/5" : "text-muted-foreground"}`}>{v}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
             </div>
           </Section>
 
