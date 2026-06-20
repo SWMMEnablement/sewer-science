@@ -40,11 +40,15 @@ function VacuumSewersMonograph() {
               HYDRAULIC ENGINEERING DESIGN SERIES
             </span>
           </div>
-          <div className="hidden sm:block mono-label text-muted-foreground italic">
-            Rev. June 2026
+          <div className="flex items-center gap-3">
+            <ModeToggle mode={mode} setMode={setMode} />
+            <span className="hidden sm:block mono-label text-muted-foreground italic">
+              Rev. June 2026
+            </span>
           </div>
         </div>
       </nav>
+
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-12 pt-12 pb-24">
         {/* Sticky Sidebar */}
