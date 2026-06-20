@@ -220,20 +220,20 @@ function VacuumSewersMonograph() {
             <Prose>
               <p>
                 ICM&apos;s 1D Saint-Venant engine is built for free-surface and surcharged
-                gravity flow. It does not natively model two-phase compressible slug transport.
-                Vacuum systems are therefore represented by analogy: the dominant transient
-                behaviors that govern <em>system-level</em> performance — sump fill cycles,
-                station duty patterns, reservoir level, and trunk-main travel times — can be
-                reproduced accurately, while the microscale air-liquid mechanics inside a
-                single transport event are abstracted away.
+                gravity flow. {isVac
+                  ? "It does not natively model two-phase compressible slug transport. Vacuum systems are therefore represented by analogy: the dominant transient behaviors that govern system-level performance — sump fill cycles, station duty patterns, reservoir level, and trunk-main travel times — can be reproduced accurately, while the microscale air-liquid mechanics inside a single transport event are abstracted away."
+                  : "A conventional gravity network is its native problem domain. Components map directly to first-class ICM objects without analogy or workaround — the engine solves free-surface flow with optional surcharge throughout."}
               </p>
             </Prose>
 
             <div className="bg-surface border border-border rounded-lg overflow-hidden">
-              <div className="p-4 bg-secondary border-b border-border">
+              <div className="p-4 bg-secondary border-b border-border flex items-center justify-between">
                 <p className="text-xs text-muted-foreground font-medium">
                   Table 4.1 — Physical component → ICM construct
                 </p>
+                <span className="mono-label text-accent">
+                  {isVac ? "VACUUM MODE" : "GRAVITY MODE"}
+                </span>
               </div>
               <div className="grid grid-cols-[1.2fr_1.3fr_1.8fr] mono-label bg-foreground text-background py-2 px-4">
                 <span>Physical</span>
@@ -241,48 +241,28 @@ function VacuumSewersMonograph() {
                 <span>Key parameters / notes</span>
               </div>
               <div className="divide-y divide-border">
-                {[
-                  [
-                    "House lateral / gravity collection",
-                    "Subcatchment + Node",
-                    "Standard wastewater profile; no RDII unless premises drain into the sump.",
-                  ],
-                  [
-                    "Collection sump (4–10 dwellings)",
-                    "Storage Node",
-                    "Custom area-depth (~0.04 m³ active). Open level boundary at top.",
-                  ],
-                  [
-                    "Interface valve",
-                    "RTC-controlled Orifice or Sluice",
-                    "Cd ≈ 0.6; binary opening logic on sump level; pulse duration 3–10 s.",
-                  ],
-                  [
-                    "Vacuum main (sawtooth)",
-                    "User-defined Conduit",
-                    "Manning's n ≈ 0.009 (PE/PVC); invert profile mirrors sawtooth; enable Preissmann slot.",
-                  ],
-                  [
-                    "Vacuum reservoir",
-                    "Storage Node",
-                    "Area-depth of physical tank; downstream level set by fixed-head outfall at negative head.",
-                  ],
-                  [
-                    "Vacuum generators",
-                    "Implicit (fixed-head boundary)",
-                    "Represented as a constant-head outfall (e.g. −5.5 to −6.5 mH₂O) maintained by RTC.",
-                  ],
-                  [
-                    "Sewage discharge pumps",
-                    "Pump (H–Q curve)",
-                    "Standard rotodynamic pump; suction from reservoir node; level-based start/stop.",
-                  ],
-                  [
-                    "Force / rising main downstream",
-                    "Conduit (circular)",
-                    "Modeled normally; pump curve must match steady-state operating point.",
-                  ],
-                ].map(([p, icm, params]) => (
+                {(isVac
+                  ? [
+                      ["House lateral / gravity collection", "Subcatchment + Node", "Standard wastewater profile; no RDII unless premises drain into the sump."],
+                      ["Collection sump (4–10 dwellings)", "Storage Node", "Custom area-depth (~0.04 m³ active). Open level boundary at top."],
+                      ["Interface valve", "RTC-controlled Orifice or Sluice", "Cd ≈ 0.6; binary opening logic on sump level; pulse duration 3–10 s."],
+                      ["Vacuum main (sawtooth)", "User-defined Conduit", "Manning's n ≈ 0.009 (PE/PVC); invert profile mirrors sawtooth; enable Preissmann slot."],
+                      ["Vacuum reservoir", "Storage Node", "Area-depth of physical tank; downstream level set by fixed-head outfall at negative head."],
+                      ["Vacuum generators", "Implicit (fixed-head boundary)", "Represented as a constant-head outfall (e.g. −5.5 to −6.5 mH₂O) maintained by RTC."],
+                      ["Sewage discharge pumps", "Pump (H–Q curve)", "Standard rotodynamic pump; suction from reservoir node; level-based start/stop."],
+                      ["Force / rising main downstream", "Conduit (circular)", "Modeled normally; pump curve must match steady-state operating point."],
+                    ]
+                  : [
+                      ["House lateral / property drainage", "Subcatchment + Node", "Standard wastewater diurnal; add RDII for combined or leaky systems."],
+                      ["Manhole / access chamber", "Manhole Node", "Cover level, invert, chamber area; flood type Lost / Stored / 2D as needed."],
+                      ["Gravity collector / trunk sewer", "Conduit (circular)", "Manning's n ≈ 0.012–0.015 (concrete); true slope; surcharge handled natively."],
+                      ["Junction / drop manhole", "Manhole + headloss type", "Standard / Quadratic / HEC-22 headloss; use drop for vertical offsets."],
+                      ["Inverted siphon", "Siphon link", "Multiple barrels with priming logic; verify scour velocity in low flows."],
+                      ["Lift / pumping station wet well", "Storage Node", "Plan area, invert, top level; defines pump start/stop range."],
+                      ["Lift station pumps", "Pump (H–Q curve)", "Level-based RTC; verify duty point against system curve."],
+                      ["Outfall to WWTP / receiving water", "Outfall Node", "Free, fixed-head, or tidal boundary as appropriate."],
+                    ]
+                ).map(([p, icm, params]) => (
                   <div
                     key={p}
                     className="grid grid-cols-[1.2fr_1.3fr_1.8fr] p-4 text-sm items-start"
@@ -294,6 +274,7 @@ function VacuumSewersMonograph() {
                 ))}
               </div>
             </div>
+
 
             <SubHeading>Modeling strategy</SubHeading>
             <Prose>
