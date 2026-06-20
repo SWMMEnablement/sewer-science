@@ -1117,3 +1117,306 @@ function VacuumSchematic() {
     </div>
   );
 }
+
+/* ----------------------------- mode toggle ------------------------------- */
+
+function ModeToggle({ mode, setMode }: { mode: Mode; setMode: (m: Mode) => void }) {
+  return (
+    <div
+      role="tablist"
+      aria-label="System mode"
+      className="inline-flex items-center rounded-md border border-border bg-surface p-0.5 text-[11px] font-mono uppercase tracking-wider"
+    >
+      {(["gravity", "vacuum"] as const).map((m) => {
+        const active = mode === m;
+        return (
+          <button
+            key={m}
+            role="tab"
+            aria-selected={active}
+            onClick={() => setMode(m)}
+            className={`px-3 py-1.5 rounded-[5px] transition-colors ${
+              active
+                ? "bg-foreground text-background font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {m}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* --------------------------- gravity schematic --------------------------- */
+
+function GravitySchematic() {
+  const manholes = [160, 360, 560, 760, 960];
+  // sloped pipe descending from left to right
+  const pipeY = (x: number) => 230 + (x - 80) * 0.07;
+  return (
+    <div className="w-full border border-border bg-surface rounded-lg overflow-hidden">
+      <svg
+        viewBox="0 0 1200 520"
+        className="w-full h-auto block"
+        role="img"
+        aria-label="Conventional gravity sewer schematic"
+      >
+        <defs>
+          <pattern id="paperGridG" width="24" height="24" patternUnits="userSpaceOnUse">
+            <path
+              d="M 24 0 L 0 0 0 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.5"
+              className="text-foreground"
+              opacity="0.06"
+            />
+          </pattern>
+        </defs>
+        <rect width="1200" height="520" fill="url(#paperGridG)" />
+
+        {/* Ground line (sloped) */}
+        <line
+          x1="0"
+          y1="110"
+          x2="1200"
+          y2="190"
+          stroke="currentColor"
+          className="text-foreground"
+          strokeWidth="1"
+          opacity="0.35"
+        />
+        <text
+          x="12"
+          y="102"
+          className="fill-current text-muted-foreground"
+          style={{ fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+        >
+          GROUND · NATURAL FALL
+        </text>
+
+        {/* Houses */}
+        {[100, 300, 500, 700, 900].map((x, i) => {
+          const gy = 110 + (x / 1200) * 80;
+          return (
+            <g key={i}>
+              <polygon
+                points={`${x - 22},${gy - 20} ${x},${gy - 45} ${x + 22},${gy - 20}`}
+                fill="currentColor"
+                className="text-accent"
+                opacity="0.85"
+              />
+              <rect
+                x={x - 18}
+                y={gy - 20}
+                width="36"
+                height="28"
+                fill="currentColor"
+                className="text-accent"
+                opacity="0.7"
+              />
+              {/* lateral to nearest manhole */}
+              <line
+                x1={x}
+                y1={gy + 8}
+                x2={manholes.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a))}
+                y2={pipeY(
+                  manholes.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a)),
+                )}
+                stroke="currentColor"
+                className="text-foreground"
+                strokeWidth="1.5"
+                opacity="0.45"
+              />
+            </g>
+          );
+        })}
+
+        {/* Gravity trunk sewer (sloped, continuous fall) */}
+        <line
+          x1="80"
+          y1={pipeY(80)}
+          x2="1080"
+          y2={pipeY(1080)}
+          stroke="currentColor"
+          className="text-foreground"
+          strokeWidth="3"
+        />
+        <line
+          x1="80"
+          y1={pipeY(80) + 16}
+          x2="1080"
+          y2={pipeY(1080) + 16}
+          stroke="currentColor"
+          className="text-foreground"
+          strokeWidth="3"
+        />
+        {/* free-surface flow inside */}
+        <line
+          x1="80"
+          y1={pipeY(80) + 10}
+          x2="1080"
+          y2={pipeY(1080) + 10}
+          stroke="currentColor"
+          className="text-accent"
+          strokeWidth="2"
+          opacity="0.5"
+        />
+
+        <text
+          x="600"
+          y={pipeY(600) + 50}
+          textAnchor="middle"
+          className="fill-current text-muted-foreground"
+          style={{ fontSize: 10, fontFamily: "JetBrains Mono, monospace" }}
+        >
+          GRAVITY TRUNK SEWER · CONTINUOUS FALL 0.4 – 1.0% · FREE-SURFACE FLOW
+        </text>
+
+        {/* Manholes */}
+        {manholes.map((x, i) => {
+          const gy = 110 + (x / 1200) * 80;
+          const py = pipeY(x);
+          return (
+            <g key={i}>
+              {/* chamber */}
+              <rect
+                x={x - 14}
+                y={gy + 6}
+                width="28"
+                height={py - gy - 6}
+                fill="currentColor"
+                className="text-surface"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <rect
+                x={x - 14}
+                y={gy + 6}
+                width="28"
+                height={py - gy - 6}
+                fill="none"
+                stroke="currentColor"
+                className="text-foreground"
+                strokeWidth="1.5"
+              />
+              {/* cover */}
+              <rect
+                x={x - 18}
+                y={gy + 2}
+                width="36"
+                height="6"
+                fill="currentColor"
+                className="text-foreground"
+              />
+              <text
+                x={x}
+                y={gy - 4}
+                textAnchor="middle"
+                className="fill-current text-muted-foreground"
+                style={{ fontSize: 9, fontFamily: "JetBrains Mono, monospace" }}
+              >
+                MH{i + 1}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Outfall */}
+        <g>
+          <rect
+            x="1080"
+            y={pipeY(1080) - 30}
+            width="90"
+            height="70"
+            fill="currentColor"
+            className="text-surface"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <rect
+            x="1080"
+            y={pipeY(1080) - 30}
+            width="90"
+            height="70"
+            fill="none"
+            stroke="currentColor"
+            className="text-foreground"
+            strokeWidth="1.5"
+          />
+          <text
+            x="1125"
+            y={pipeY(1080) + 60}
+            textAnchor="middle"
+            className="fill-current text-foreground"
+            style={{ fontSize: 11, fontFamily: "JetBrains Mono, monospace", fontWeight: 600 }}
+          >
+            OUTFALL / WWTP
+          </text>
+        </g>
+
+        {/* Callouts */}
+        <g style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10 }}>
+          <line
+            x1="160"
+            y1={pipeY(160)}
+            x2="160"
+            y2="380"
+            stroke="currentColor"
+            className="text-accent"
+            strokeWidth="1"
+            strokeDasharray="2 2"
+          />
+          <text x="160" y="400" textAnchor="middle" className="fill-current text-accent" fontWeight="700">
+            MANHOLE NODE
+          </text>
+
+          <line
+            x1="600"
+            y1={pipeY(600) + 16}
+            x2="600"
+            y2="430"
+            stroke="currentColor"
+            className="text-foreground"
+            strokeWidth="1"
+            strokeDasharray="2 2"
+            opacity="0.5"
+          />
+          <text x="600" y="450" textAnchor="middle" className="fill-current text-foreground" fontWeight="700">
+            CIRCULAR CONDUIT
+          </text>
+        </g>
+
+        {/* Direction of flow */}
+        <g>
+          <line
+            x1="700"
+            y1="490"
+            x2="900"
+            y2="490"
+            stroke="currentColor"
+            className="text-accent"
+            strokeWidth="1.5"
+          />
+          <polygon
+            points="900,485 900,495 912,490"
+            fill="currentColor"
+            className="text-accent"
+          />
+          <text
+            x="800"
+            y="510"
+            textAnchor="middle"
+            className="fill-current text-accent"
+            style={{ fontSize: 10, fontFamily: "JetBrains Mono, monospace", fontWeight: 600 }}
+          >
+            FLOW · GRAVITY DRIVEN
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
