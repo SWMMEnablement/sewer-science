@@ -733,7 +733,11 @@ function CaseStudy({
 
 /* ----------------------------- schematic SVG ----------------------------- */
 
-function SystemSchematic() {
+function SystemSchematic({ mode }: { mode: Mode }) {
+  return mode === "vacuum" ? <VacuumSchematic /> : <GravitySchematic />;
+}
+
+function VacuumSchematic() {
   return (
     <div className="w-full border border-border bg-surface rounded-lg overflow-hidden">
       <svg
@@ -742,6 +746,7 @@ function SystemSchematic() {
         role="img"
         aria-label="Vacuum sewer system schematic"
       >
+
         <defs>
           <pattern id="paperGrid" width="24" height="24" patternUnits="userSpaceOnUse">
             <path
