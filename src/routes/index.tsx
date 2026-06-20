@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+
+type Mode = "vacuum" | "gravity";
 
 export const Route = createFileRoute("/")({
   head: () => ({
